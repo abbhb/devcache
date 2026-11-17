@@ -192,6 +192,18 @@ class CacheTests(unittest.TestCase):
             self.assertEqual(popen.call_args.args[0], [str(exe), "hello", "argument with spaces"])
             self.assertIn(str(self.mount), popen.call_args.kwargs["env"]["npm_config_cache"])
 
+    def test_another_installation_shim_is_not_mistaken_for_an_installed_tool(self):
+        foreign = self.root / "another user/.local/share/devcache/shims"
+        foreign.mkdir(parents=True)
+        shim = foreign / "npm"
+        shim.write_text("#!/bin/sh\n# devcache shim\nexit 77\n")
+        shim.chmod(0o755)
+        self.app.env["PATH"] = str(foreign) + ":" + str(self.bin)
+        self.assertIsNone(self.app.real_path("npm"))
+        self.assertIsNone(self.app.scan_one("npm"))
+        actual = self.make_tool("npm")
+        self.assertEqual(self.app.real_path("npm"), str(actual))
+
     def test_corrupt_config_does_not_block_real_tool_execution(self):
         self.add_npm()
         self.app.config_path.parent.mkdir(parents=True)

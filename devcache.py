@@ -183,7 +183,10 @@ class App:
     def real_path(self, command):
         entries = []
         for entry in self.env.get("PATH", os.defpath).split(os.pathsep):
-            if os.path.abspath(entry or ".") != str(self.shims):
+            absolute = Path(os.path.abspath(entry or "."))
+            # A custom --home installation may inherit another user's/prefix's
+            # devcache shims. Skip all generated shim directories, not just ours.
+            if absolute.parts[-4:] != (".local", "share", "devcache", "shims"):
                 entries.append(entry)
         return shutil.which(command, path=os.pathsep.join(entries))
 
