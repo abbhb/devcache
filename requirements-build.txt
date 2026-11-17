@@ -1,0 +1,2 @@
+# Build-time only. Released users do not need Python or these dependencies.
+pyinstaller==6.22.3
