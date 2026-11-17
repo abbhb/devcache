@@ -327,10 +327,17 @@ class CacheTests(unittest.TestCase):
         self.assertTrue((self.app.shims / "npm").exists())
         self.assertFalse((self.app.shims / "yarn").exists())
         self.assertFalse((self.app.shims / "go").exists())
-        cp = subprocess.run(["/bin/zsh", "-fc", f"source {devcache.shlex.quote(str(self.app.shell_path))}; whence -w npm; whence -w yarn"], capture_output=True, text=True)
+        shell = ["/bin/zsh", "-fc", f"source {devcache.shlex.quote(str(self.app.shell_path))}; whence -w npm; whence -w yarn"]
+        isolated_env = dict(os.environ, PATH=str(self.bin))
+        cp = subprocess.run(shell, env=isolated_env, capture_output=True, text=True)
         self.assertIn("npm: function", cp.stdout)
         self.assertIn("yarn: none", cp.stdout)
         self.assertNotIn("parse error", cp.stderr)
+        # A real unselected tool must remain available, without a generated wrapper.
+        self.make_tool("yarn")
+        cp = subprocess.run(shell, env=isolated_env, capture_output=True, text=True)
+        self.assertIn("yarn: command", cp.stdout)
+        self.assertNotIn("yarn: function", cp.stdout)
 
     def test_uninstall_preserves_settings_and_all_caches(self):
         self.setup_npm()
