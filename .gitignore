@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.DS_Store
+.venv*/
+build/
+dist/
+release/
+*.spec
+.devcache-volume.json
+config.json
+install.json
